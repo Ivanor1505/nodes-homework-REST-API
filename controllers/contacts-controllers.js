@@ -1,4 +1,4 @@
-import * as contactService from "../models/contacts.js";
+import Contact from "../models/contacts.js";
 
 import { HttpError } from "../helpers/index.js";
 
@@ -9,7 +9,7 @@ import {
 
 const getAll = async (req, res, next) => {
   try {
-    const result = await contactService.listContacts();
+    const result = await Contact.find();
     res.json(result);
   } catch (error) {
     next(error);
@@ -19,7 +19,7 @@ const getAll = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await contactService.getContactById(id);
+    const result = await Contact.findById(id);
     if (!result) {
       throw HttpError(404, `Contact with id=${id} not found`);
     }
@@ -35,7 +35,7 @@ const add = async (req, res, next) => {
     if (error) {
       throw HttpError(400, error.message);
     }
-    const result = await contactService.addContact(req.body);
+    const result = await Contact.create(req.body);
 
     res.status(201).json(result);
   } catch (error) {
@@ -50,7 +50,7 @@ const updateById = async (req, res, next) => {
       throw HttpError(400, error.message);
     }
     const { id } = req.params;
-    const result = await contactService.updateContact(id, req.body);
+    const result = await Contact.findByIdAndUpdate(id, req.body);
     if (!result) {
       throw HttpError(404, `Contact with id=${id} not found`);
     }
@@ -61,10 +61,29 @@ const updateById = async (req, res, next) => {
   }
 };
 
+const updateStatusContact = async (req, res) => {
+  const { id } = req.params;
+  const { favorite } = req.body;
+
+  if (favorite === undefined) {
+    return res.status(400).json({ message: "missing field favorite" });
+  }
+
+  try {
+    const updatedContact = await Contact.findByIdAndUpdate(id, { favorite });
+    if (!updatedContact) {
+      return res.status(404).json({ message: "Not found" });
+    }
+    res.status(200).json(updatedContact);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await contactService.removeContact(id);
+    const result = await Contact.findByIdAndDelete(id);
     if (!result) {
       throw HttpError(404, `Contact with id=${id} not found`);
     }
@@ -83,4 +102,5 @@ export default {
   add,
   updateById,
   deleteById,
+  updateStatusContact,
 };
