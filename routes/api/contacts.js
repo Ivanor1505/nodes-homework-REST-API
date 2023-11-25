@@ -14,6 +14,8 @@ router.post("/", isEmptyBody, contactsController.add);
 
 router.put("/:id", isEmptyBody, contactsController.updateById);
 
+router.patch("/:id/favorite", isEmptyBody, contactsController.updateStatusContact);
+
 router.delete("/:id", contactsController.deleteById);
 
 export default router;
