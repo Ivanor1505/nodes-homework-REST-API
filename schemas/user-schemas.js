@@ -5,6 +5,7 @@ const emailRegexp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 export const userRegisterSchema = Joi.object({
   password: Joi.string().min(6).required(),
   email: Joi.string().pattern(emailRegexp).required(),
+  avatarURL: Joi.string(),
   subscription: Joi.string(),
 });
 
