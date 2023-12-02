@@ -101,6 +101,10 @@ const logout = async (req, res, next) => {
 const updAvatar = async (req, res, next) => {
   try {
     const { _id } = req.user;
+    if (!req.file) {
+      throw HttpError(400, "No file provided");
+    }
+
     const { path: oldPath, filename } = req.file;
 
     const img = await Jimp.read(oldPath);
@@ -108,8 +112,8 @@ const updAvatar = async (req, res, next) => {
     await img.writeAsync(oldPath);
 
     const newPath = path.join(avatarsPath, filename);
-    await fs.rename(oldPath, newPath);  
-    
+    await fs.rename(oldPath, newPath);
+
     const avatarURL = path.join("avatars", filename);
     await User.findByIdAndUpdate(_id, { avatarURL });
 
