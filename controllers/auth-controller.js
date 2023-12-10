@@ -38,7 +38,7 @@ const register = async (req, res, next) => {
     const verifyEmail = {
       to: email,
       subject: "Verify email",
-      html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${verificationToken}">Click verify email</a>`,
+      html: `<a target="_blank" href="${BASE_URL}/api/users/verify/${verificationToken}">Click verify email</a>`,
     };
     await sendEmail(verifyEmail);
 
@@ -51,43 +51,51 @@ const register = async (req, res, next) => {
   }
 };
 
-const verify = async (req, res) => {
-  const { verificationToken } = req.params;
-  const user = await User.findOne({ verificationToken });
-  if (!user) {
-    throw HttpError(400, "missing required field email");
+const verify = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken });
+    if (!user) {
+      throw HttpError(404, "User not found");
+    }
+
+    await User.findByIdAndUpdate(user._id, {
+      verify: true,
+      verificationToken: "",
+    });
+
+    res.json({
+      message: "Verification successful",
+    });
+  } catch (error) {
+    next(error);
   }
-
-  await User.findByIdAndUpdate(user._id, {
-    verify: true,
-    verificationToken: "",
-  });
-
-  res.json({
-    message: "Email verify success",
-  });
 };
 
-const resendVerify = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw HttpError(400, "missing required field email");
-  }
-  if (user.verify) {
-    throw HttpError(400, "Verification has already been passed");
-  }
-  const verifyEmail = {
-    to: email,
-    subject: "Verify email",
-    html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${user.verificationToken}">Click verify email</a>`,
-  };
+const resendVerify = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw HttpError(400, "missing required field email");
+    }
+    if (user.verify) {
+      throw HttpError(400, "Verification has already been passed");
+    }
+    const verifyEmail = {
+      to: email,
+      subject: "Verify email",
+      html: `<a target="_blank" href="${BASE_URL}/api/users/verify/${user.verificationToken}">Click verify email</a>`,
+    };
 
-  await sendEmail(verifyEmail);
+    await sendEmail(verifyEmail);
 
-  res.json({
-    message: "Email send success",
-  });
+    res.json({
+      message: "Email send success",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const login = async (req, res, next) => {
